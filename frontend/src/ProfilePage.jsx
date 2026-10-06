@@ -1,13 +1,28 @@
+import EditProfile from './EditProfile.jsx'
 import UserMenu from './UserMenu.jsx'
 
-function Dashboard({ user, onLogout, onOpenProfile, onOpenList, onOpenReview, onOpenStaff, canManageChallenges, canReviewQueue, canManageStaff }) {
+// admin version of the profile page, with the same top menu as the admin pages
+function ProfilePage({
+  user,
+  onLogout,
+  onUnauthorized,
+  onProfileSaved,
+  onOpenDashboard,
+  onOpenList,
+  onOpenReview,
+  onOpenStaff,
+  canManageChallenges,
+  canReviewQueue,
+  canManageStaff,
+}) {
   return (
     <div>
-      {/* top menu */}
       <div className="nav">
         <span className="nav-logo">Coding Challenge Platform</span>
         <div className="nav-links">
-          <span>Dashboard</span>
+          <button type="button" className="nav-link" onClick={onOpenDashboard}>
+            Dashboard
+          </button>
           {canManageChallenges && (
             <button type="button" className="nav-link" onClick={onOpenList}>
               Challenge Management
@@ -23,12 +38,13 @@ function Dashboard({ user, onLogout, onOpenProfile, onOpenList, onOpenReview, on
               Staff Accounts
             </button>
           )}
-          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
-      <h1 className="page-title">Dashboard</h1>
+
+      <EditProfile onUnauthorized={onUnauthorized} onSaved={onProfileSaved} />
     </div>
   )
 }
 
-export default Dashboard
+export default ProfilePage

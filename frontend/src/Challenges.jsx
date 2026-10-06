@@ -6,8 +6,19 @@ import AttemptDetail from './AttemptDetail.jsx'
 import ReviewHistory from './ReviewHistory.jsx'
 import NotFound from './NotFound.jsx'
 import UserMenu from './UserMenu.jsx'
+import EditProfile from './EditProfile.jsx'
 
-function Challenges({ user, onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
+function Challenges({
+  user,
+  onLogout,
+  onOpenProfile,
+  onProfileSaved,
+  page,
+  onOpenPage,
+  onUnauthorized,
+  challengeId,
+  attemptId,
+}) {
   // learner pages share this top menu
   const titles = {
     progress: 'Progress',
@@ -43,9 +54,13 @@ function Challenges({ user, onLogout, page, onOpenPage, onUnauthorized, challeng
           <button type="button" className="nav-link" onClick={() => onOpenPage('browsing')}>
             Browsing History
           </button>
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
         </div>
       </div>
+
+      {page === 'profile' ? (
+        <EditProfile onUnauthorized={onUnauthorized} onSaved={onProfileSaved} />
+      ) : null}
 
       {page === 'challenges' ? (
         <BrowseChallenges
@@ -113,7 +128,7 @@ function Challenges({ user, onLogout, page, onOpenPage, onUnauthorized, challeng
         />
       ) : null}
 
-      {page !== 'challenges' && page !== 'detail' && page !== 'history' && page !== 'reviews' && page !== 'attempt' ? (
+      {page !== 'challenges' && page !== 'detail' && page !== 'history' && page !== 'reviews' && page !== 'attempt' && page !== 'profile' ? (
         <h1 className="page-title">{titles[page]}</h1>
       ) : null}
     </div>

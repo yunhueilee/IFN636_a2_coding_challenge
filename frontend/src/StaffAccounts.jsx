@@ -28,7 +28,7 @@ function isStrongPassword(password) {
   )
 }
 
-function StaffAccounts({ user, onLogout, onOpenDashboard, onForbidden, onUnauthorized }) {
+function StaffAccounts({ user, onLogout, onOpenProfile, onOpenDashboard, onForbidden, onUnauthorized }) {
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -169,7 +169,7 @@ function StaffAccounts({ user, onLogout, onOpenDashboard, onForbidden, onUnautho
             Dashboard
           </button>
           <span>Staff Accounts</span>
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
         </div>
       </div>
 

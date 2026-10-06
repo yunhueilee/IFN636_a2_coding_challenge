@@ -13,7 +13,7 @@ function formatDate(value) {
   })
 }
 
-function ChallengeList({ user, onLogout, onOpenDashboard, onOpenReview, onCreate, onOpenChallenge, onForbidden, onUnauthorized }) {
+function ChallengeList({ user, onLogout, onOpenProfile, onOpenDashboard, onOpenReview, onCreate, onOpenChallenge, onForbidden, onUnauthorized }) {
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
 
@@ -66,7 +66,7 @@ function ChallengeList({ user, onLogout, onOpenDashboard, onOpenReview, onCreate
           <button type="button" className="nav-link" onClick={onOpenReview}>
             Review Queue
           </button>
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
         </div>
       </div>
 

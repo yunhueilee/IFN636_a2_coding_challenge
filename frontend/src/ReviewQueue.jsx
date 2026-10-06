@@ -44,6 +44,7 @@ function ReviewQueue({
   attemptId,
   user,
   onLogout,
+  onOpenProfile,
   onOpenDashboard,
   onOpenList,
   onOpenQueue,
@@ -243,7 +244,7 @@ function ReviewQueue({
             Challenge Management
           </button>
           <span>Review Queue</span>
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
         </div>
       </div>
 

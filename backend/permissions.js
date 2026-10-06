@@ -11,6 +11,7 @@ const permissions = {
     websiteNotification: ADMIN_ROLES,
     staffManagement: ['SUPER_ADMIN'],
     learnerChallenges: ['LEARNER'],
+    reassignReview: ['ADMIN_MANAGER'],
 }
 
 function can(role, page) {

@@ -42,7 +42,7 @@ function formFromChallenge(challenge) {
   }
 }
 
-function CreateChallenge({ user, onLogout, onBack, onOpenDashboard, onOpenList, onOpenReview, challenge, onForbidden, onUnauthorized }) {
+function CreateChallenge({ user, onLogout, onOpenProfile, onBack, onOpenDashboard, onOpenList, onOpenReview, challenge, onForbidden, onUnauthorized }) {
   const [form, setForm] = useState(() => formFromChallenge(challenge))
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
@@ -322,7 +322,7 @@ function CreateChallenge({ user, onLogout, onBack, onOpenDashboard, onOpenList, 
           <button type="button" className="nav-link" onClick={onOpenReview}>
             Review Queue
           </button>
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onEditProfile={onOpenProfile} />
         </div>
       </div>
 

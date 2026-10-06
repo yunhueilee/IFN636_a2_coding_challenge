@@ -8,6 +8,7 @@ import CreateChallenge from './CreateChallenge.jsx'
 import Challenges from './Challenges.jsx'
 import ReviewQueue from './ReviewQueue.jsx'
 import StaffAccounts from './StaffAccounts.jsx'
+import ProfilePage from './ProfilePage.jsx'
 import NotFound from './NotFound.jsx'
 import Forbidden from './Forbidden.jsx'
 import { can } from './permissions.js'
@@ -135,6 +136,13 @@ function App() {
     navigate(logoutPath)
   }
 
+  // keep the header name in step with a saved username
+  const handleProfileSaved = (saved) => {
+    const storage = localStorage.getItem('token') ? localStorage : sessionStorage
+    storage.setItem('username', saved.username)
+    setUser((current) => ({ ...current, username: saved.username }))
+  }
+
   const goAdminHome = () => {
     setEditingChallenge(null)
     navigate('/admin/dashboard')
@@ -153,6 +161,7 @@ function App() {
       '/history': 'history',
       '/reviews': 'reviews',
       '/browsing-history': 'browsing',
+      '/profile': 'profile',
     }
 
     const challengeId = path.startsWith('/challenges/') ? path.slice('/challenges/'.length) : ''
@@ -162,11 +171,13 @@ function App() {
       return (
         <Challenges
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           onUnauthorized={handleLogout}
           page={attemptId ? 'attempt' : challengeId ? 'detail' : learnerPages[path]}
           challengeId={challengeId}
           attemptId={attemptId}
+          onProfileSaved={handleProfileSaved}
           onOpenPage={(name, id) => {
             const urls = {
               challenges: '/',
@@ -202,6 +213,24 @@ function App() {
       ? path.slice('/admin/review-queue/'.length)
       : ''
 
+    if (path === '/profile') {
+      return (
+        <ProfilePage
+          user={currentUser}
+          onLogout={handleLogout}
+          onUnauthorized={handleLogout}
+          onProfileSaved={handleProfileSaved}
+          onOpenDashboard={() => navigate('/admin/dashboard')}
+          onOpenList={() => navigate('/admin/challenges')}
+          onOpenReview={() => navigate('/admin/review-queue')}
+          onOpenStaff={() => navigate('/admin/staff')}
+          canManageChallenges={canManageChallenges}
+          canReviewQueue={canReviewQueue}
+          canManageStaff={can(role, 'staffManagement')}
+        />
+      )
+    }
+
     if (path === '/admin/review-queue' || reviewAttemptId) {
       if (!canReviewQueue) {
         return <Forbidden onHome={goAdminHome} />
@@ -211,6 +240,7 @@ function App() {
         <ReviewQueue
           attemptId={reviewAttemptId}
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -231,6 +261,7 @@ function App() {
       return (
         <StaffAccounts
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -249,6 +280,7 @@ function App() {
           key={editingChallenge ? editingChallenge._id : 'new'}
           challenge={editingChallenge}
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -280,6 +312,7 @@ function App() {
       return (
         <ChallengeList
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -301,6 +334,7 @@ function App() {
       return (
         <Dashboard
           user={currentUser}
+          onOpenProfile={() => navigate('/profile')}
           onLogout={handleLogout}
           canManageChallenges={canManageChallenges}
           canReviewQueue={canReviewQueue}

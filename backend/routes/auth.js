@@ -1,13 +1,13 @@
-// this file is for login and register routes
+// this file is for login, register and profile routes
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 const { isStrongPassword } = require('../utils/passwordRules');
+const { ADMIN_ROLES } = require('../permissions');
 
 const router = express.Router();
-
-const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
 
 function makeToken(user, expiresIn) {
     return jwt.sign(
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
         }
 
         // three admin types can use this login, learners cannot
-        if (!adminRoles.includes(user.role)) {
+        if (!ADMIN_ROLES.includes(user.role)) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
@@ -167,6 +167,91 @@ router.post('/register', async (req, res) => {
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot create account' });
+    }
+});
+
+// the profile fields the user can see and edit
+function profilePayload(user) {
+    return {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        gender: user.gender,
+    };
+}
+
+router.get('/profile', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        return res.json(profilePayload(user));
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// email is not changed here, only username, gender and password
+router.put('/profile', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const username = String(req.body.username || '').trim();
+        const genderValue = String(req.body.gender || '').trim();
+        const currentPassword = String(req.body.currentPassword || '');
+        const newPassword = String(req.body.newPassword || '');
+        const changingPassword = newPassword.length > 0;
+        const fieldErrors = {};
+
+        if (!username) {
+            fieldErrors.username = 'This field is required';
+        } else if (await User.findOne({ username, _id: { $ne: user._id } })) {
+            fieldErrors.username = 'This username is already used';
+        }
+
+        if (genderValue && !['Male', 'Female', 'Other'].includes(genderValue)) {
+            fieldErrors.gender = 'Choose a valid gender';
+        }
+
+        if (changingPassword) {
+            if (!currentPassword) {
+                fieldErrors.currentPassword = 'Enter your current password';
+            } else if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+                fieldErrors.currentPassword = 'Current password is incorrect';
+            }
+
+            if (!isStrongPassword(newPassword)) {
+                fieldErrors.newPassword =
+                    'Password must include uppercase, lowercase, a number and a symbol';
+            }
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            return res.status(400).json(fieldErrors);
+        }
+
+        user.username = username;
+        user.gender = genderValue || null;
+
+        if (changingPassword) {
+            user.passwordHash = await bcrypt.hash(newPassword, 10);
+        }
+
+        await user.save();
+
+        return res.json(profilePayload(user));
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ message: 'Server error' });
     }
 });
 

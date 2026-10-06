@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 // user name and email in the top menu, click to open the log out menu
-function UserMenu({ user, onLogout }) {
+function UserMenu({ user, onLogout, onEditProfile }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -60,6 +60,18 @@ function UserMenu({ user, onLogout }) {
             <p className="user-menu-email">{user.email || '-'}</p>
             <p className="user-menu-role">{user.role || '-'}</p>
           </div>
+          {onEditProfile && (
+            <button
+              type="button"
+              className="user-menu-item"
+              onClick={() => {
+                setOpen(false)
+                onEditProfile()
+              }}
+            >
+              Edit profile
+            </button>
+          )}
           <button
             type="button"
             className="user-menu-item"

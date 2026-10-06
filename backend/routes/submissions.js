@@ -6,7 +6,7 @@ const Progress = require('../models/Progress');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
-const { permissions } = require('../permissions');
+const { permissions, can } = require('../permissions');
 const { sendReviewEmail } = require('../utils/sendMail');
 
 const router = express.Router();
@@ -166,7 +166,7 @@ router.get('/review-queue/:id', auth, canReview, async (req, res) => {
 router.get('/reviewers', auth, canReview, async (req, res) => {
     try {
         const reviewers = await User.find({
-            role: { $in: ['ADMIN', 'ADMIN_MANAGER'] },
+            role: { $in: permissions.reviewQueue },
             active: true,
         }).select('username role');
 
@@ -250,13 +250,13 @@ router.post('/review-queue/:id/release', auth, canReview, async (req, res) => {
 router.post('/review-queue/:id/reassign', auth, canReview, async (req, res) => {
     // only admin manager can move a locked review to someone else
     try {
-        if (req.user.role !== 'ADMIN_MANAGER') {
+        if (!can(req.user.role, 'reassignReview')) {
             return res.status(403).json({ message: 'Only an Admin Manager can reassign a review' });
         }
 
         const nextReviewer = await User.findOne({
             _id: req.body.reviewerId,
-            role: { $in: ['ADMIN', 'ADMIN_MANAGER'] },
+            role: { $in: permissions.reviewQueue },
             active: true,
         });
 
