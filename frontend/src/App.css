@@ -47,6 +47,106 @@ body {
   cursor: pointer;
 }
 
+/* username in the top menu, opens email and role */
+.user-menu {
+  position: relative;
+  display: flex;
+}
+
+.user-menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: white;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.user-menu-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-menu-caret {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  min-width: 240px;
+  padding: 4px 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.user-menu-info {
+  padding: 8px 16px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-wrap: anywhere;
+}
+
+.user-menu-info p {
+  margin: 0;
+}
+
+.user-menu-email {
+  font-size: 14px;
+  color: #111827;
+}
+
+.user-menu-role {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.user-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #111827;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background: #f3f4f6;
+}
+
+/* phones: user section gets its own row under the logo */
+@media (max-width: 600px) {
+  .nav {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nav-links {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+
+  .nav-links .user-menu {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 .page-title {
   margin: 40px 32px;
   font-size: 28px;
@@ -116,6 +216,19 @@ textarea {
   align-items: center;
   margin: 0;
   font-size: 13px;
+}
+
+/* label with a show/hide button on the same row */
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.label-row label {
+  margin: 0;
 }
 
 input[type="checkbox"] {

@@ -5,6 +5,7 @@ function LearnerLogin({ onLogin }) {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -29,7 +30,7 @@ function LearnerLogin({ onLogin }) {
         return
       }
 
-      onLogin(data.token, rememberMe, data.user.username, data.user.role)
+      onLogin(data.token, rememberMe, data.user.username, data.user.role, data.user.email)
     } catch (error) {
       setMessage('Cannot connect to server')
     }
@@ -50,9 +51,18 @@ function LearnerLogin({ onLogin }) {
           required
         />
 
-        <label>Password:</label>
+        <div className="label-row">
+          <label>Password:</label>
+          <button
+            type="button"
+            className="link"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required

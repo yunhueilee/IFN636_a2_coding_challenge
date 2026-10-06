@@ -5,8 +5,9 @@ import AttemptHistory from './AttemptHistory.jsx'
 import AttemptDetail from './AttemptDetail.jsx'
 import ReviewHistory from './ReviewHistory.jsx'
 import NotFound from './NotFound.jsx'
+import UserMenu from './UserMenu.jsx'
 
-function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
+function Challenges({ user, onLogout, page, onOpenPage, onUnauthorized, challengeId, attemptId }) {
   // learner pages share this top menu
   const titles = {
     progress: 'Progress',
@@ -42,9 +43,7 @@ function Challenges({ onLogout, page, onOpenPage, onUnauthorized, challengeId, a
           <button type="button" className="nav-link" onClick={() => onOpenPage('browsing')}>
             Browsing History
           </button>
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
 

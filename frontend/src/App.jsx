@@ -20,6 +20,14 @@ function getSavedRole() {
   return localStorage.getItem('role') || sessionStorage.getItem('role') || ''
 }
 
+function getSavedUser() {
+  return {
+    username: localStorage.getItem('username') || sessionStorage.getItem('username') || '',
+    email: localStorage.getItem('email') || sessionStorage.getItem('email') || '',
+    role: getSavedRole(),
+  }
+}
+
 function isLearnerRole(role) {
   return role === 'LEARNER'
 }
@@ -31,6 +39,9 @@ function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [editingChallenge, setEditingChallenge] = useState(null)
   const [errorPage, setErrorPage] = useState('')
+  const [user, setUser] = useState(getSavedUser)
+  // user info is only shown while logged in
+  const currentUser = isLoggedIn ? user : null
 
   const navigate = (next) => {
     if (window.location.pathname !== next) {
@@ -79,24 +90,29 @@ function App() {
     }
   }, [isLoggedIn, role, path])
 
-  const handleLogin = (token, rememberMe, username, userRole) => {
+  const handleLogin = (token, rememberMe, username, userRole, email = '') => {
     if (rememberMe) {
       localStorage.setItem('token', token)
       localStorage.setItem('username', username)
       localStorage.setItem('role', userRole)
+      localStorage.setItem('email', email)
       sessionStorage.removeItem('token')
       sessionStorage.removeItem('username')
       sessionStorage.removeItem('role')
+      sessionStorage.removeItem('email')
     } else {
       sessionStorage.setItem('token', token)
       sessionStorage.setItem('username', username)
       sessionStorage.setItem('role', userRole)
+      sessionStorage.setItem('email', email)
       localStorage.removeItem('token')
       localStorage.removeItem('username')
       localStorage.removeItem('role')
+      localStorage.removeItem('email')
     }
 
     setRole(userRole)
+    setUser({ username, email, role: userRole })
     setIsLoggedIn(true)
     navigate(isLearnerRole(userRole) ? '/' : '/admin/dashboard')
   }
@@ -106,12 +122,15 @@ function App() {
     localStorage.removeItem('token')
     localStorage.removeItem('username')
     localStorage.removeItem('role')
+    localStorage.removeItem('email')
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('username')
     sessionStorage.removeItem('role')
+    sessionStorage.removeItem('email')
     setEditingChallenge(null)
     setErrorPage('')
     setRole('')
+    setUser({ username: '', email: '', role: '' })
     setIsLoggedIn(false)
     navigate(logoutPath)
   }
@@ -142,6 +161,7 @@ function App() {
     if (learnerPages[path] || challengeId || attemptId) {
       return (
         <Challenges
+          user={currentUser}
           onLogout={handleLogout}
           onUnauthorized={handleLogout}
           page={attemptId ? 'attempt' : challengeId ? 'detail' : learnerPages[path]}
@@ -190,6 +210,7 @@ function App() {
       return (
         <ReviewQueue
           attemptId={reviewAttemptId}
+          user={currentUser}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -209,6 +230,7 @@ function App() {
 
       return (
         <StaffAccounts
+          user={currentUser}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -226,6 +248,7 @@ function App() {
         <CreateChallenge
           key={editingChallenge ? editingChallenge._id : 'new'}
           challenge={editingChallenge}
+          user={currentUser}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -256,6 +279,7 @@ function App() {
 
       return (
         <ChallengeList
+          user={currentUser}
           onLogout={handleLogout}
           onForbidden={() => setErrorPage('403')}
           onUnauthorized={handleLogout}
@@ -276,6 +300,7 @@ function App() {
     if (path === '/admin/dashboard' || path === '/admin' || path === '/' || path === '/login' || path === '/register') {
       return (
         <Dashboard
+          user={currentUser}
           onLogout={handleLogout}
           canManageChallenges={canManageChallenges}
           canReviewQueue={canReviewQueue}

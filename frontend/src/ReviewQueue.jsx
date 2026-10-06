@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import UserMenu from './UserMenu.jsx'
 
 function formatTime(value) {
   if (!value) {
@@ -41,6 +42,7 @@ function getSaved(name) {
 // Super Admin cannot open this page, App already checks the role
 function ReviewQueue({
   attemptId,
+  user,
   onLogout,
   onOpenDashboard,
   onOpenList,
@@ -241,9 +243,7 @@ function ReviewQueue({
             Challenge Management
           </button>
           <span>Review Queue</span>
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
 

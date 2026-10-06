@@ -16,6 +16,7 @@ function Register({ onLogin }) {
   const [gender, setGender] = useState('')
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const emailOk = Boolean(email.trim())
   const usernameOk = Boolean(username.trim())
@@ -75,7 +76,7 @@ function Register({ onLogin }) {
         return
       }
 
-      onLogin(data.token, false, data.user.username, data.user.role)
+      onLogin(data.token, false, data.user.username, data.user.role, data.user.email)
     } catch (error) {
       setMessage('Cannot connect to server')
     }
@@ -117,9 +118,18 @@ function Register({ onLogin }) {
         </div>
 
         <div className="field">
-          <label>Password:</label>
+          <div className="label-row">
+            <label>Password:</label>
+            <button
+              type="button"
+              className="link"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(event) => {
               setPassword(event.target.value)

@@ -1,4 +1,6 @@
-function Dashboard({ onLogout, onOpenList, onOpenReview, onOpenStaff, canManageChallenges, canReviewQueue, canManageStaff }) {
+import UserMenu from './UserMenu.jsx'
+
+function Dashboard({ user, onLogout, onOpenList, onOpenReview, onOpenStaff, canManageChallenges, canReviewQueue, canManageStaff }) {
   return (
     <div>
       {/* top menu */}
@@ -21,10 +23,7 @@ function Dashboard({ onLogout, onOpenList, onOpenReview, onOpenStaff, canManageC
               Staff Accounts
             </button>
           )}
-          {/* logout button, click to go back to login */}
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
       <h1 className="page-title">Dashboard</h1>

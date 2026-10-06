@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import UserMenu from './UserMenu.jsx'
 
 const roleOptions = [
   { value: 'ADMIN', label: 'Admin' },
@@ -27,7 +28,7 @@ function isStrongPassword(password) {
   )
 }
 
-function StaffAccounts({ onLogout, onOpenDashboard, onForbidden, onUnauthorized }) {
+function StaffAccounts({ user, onLogout, onOpenDashboard, onForbidden, onUnauthorized }) {
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -168,9 +169,7 @@ function StaffAccounts({ onLogout, onOpenDashboard, onForbidden, onUnauthorized 
             Dashboard
           </button>
           <span>Staff Accounts</span>
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
 

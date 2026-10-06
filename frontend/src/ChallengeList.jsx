@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import UserMenu from './UserMenu.jsx'
 
 function formatDate(value) {
   if (!value) {
@@ -12,7 +13,7 @@ function formatDate(value) {
   })
 }
 
-function ChallengeList({ onLogout, onOpenDashboard, onOpenReview, onCreate, onOpenChallenge, onForbidden, onUnauthorized }) {
+function ChallengeList({ user, onLogout, onOpenDashboard, onOpenReview, onCreate, onOpenChallenge, onForbidden, onUnauthorized }) {
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
 
@@ -65,9 +66,7 @@ function ChallengeList({ onLogout, onOpenDashboard, onOpenReview, onCreate, onOp
           <button type="button" className="nav-link" onClick={onOpenReview}>
             Review Queue
           </button>
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
 

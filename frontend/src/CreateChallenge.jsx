@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import UserMenu from './UserMenu.jsx'
 
 const emptyForm = {
   title: '',
@@ -41,7 +42,7 @@ function formFromChallenge(challenge) {
   }
 }
 
-function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, onOpenReview, challenge, onForbidden, onUnauthorized }) {
+function CreateChallenge({ user, onLogout, onBack, onOpenDashboard, onOpenList, onOpenReview, challenge, onForbidden, onUnauthorized }) {
   const [form, setForm] = useState(() => formFromChallenge(challenge))
   const [errors, setErrors] = useState({})
   const [keywordText, setKeywordText] = useState('')
@@ -321,9 +322,7 @@ function CreateChallenge({ onLogout, onBack, onOpenDashboard, onOpenList, onOpen
           <button type="button" className="nav-link" onClick={onOpenReview}>
             Review Queue
           </button>
-          <button type="button" className="nav-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <UserMenu user={user} onLogout={onLogout} />
         </div>
       </div>
 
