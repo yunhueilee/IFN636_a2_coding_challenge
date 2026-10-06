@@ -4,6 +4,22 @@ dist/
 build/
 *.bkp
 .playwright-cli/
+docs/
+mynote.txt
+CLAUDE.md
+
+# Node.js
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.bak
+.npm
+.yarn-integrity
+coverage/
+.env
+.env.local
+.cache/
+*.tsbuildinfo
 
 # Logs
 *.log
@@ -16,3 +32,8 @@ npm-debug.log*
 
 # OS files
 .DS_Store
+
+# Assignment paperwork, not project code
+Assessment 2 - Submission Template.pdf
+*.pdf
+

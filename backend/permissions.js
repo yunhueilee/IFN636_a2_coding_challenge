@@ -9,6 +9,7 @@ const permissions = {
     dataStatistics: ADMIN_ROLES,
     challengeUpload: ['ADMIN', 'ADMIN_MANAGER'],
     websiteNotification: ADMIN_ROLES,
+    staffManagement: ['SUPER_ADMIN'],
     learnerChallenges: ['LEARNER'],
 }
 

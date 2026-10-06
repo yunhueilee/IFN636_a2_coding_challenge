@@ -1,4 +1,4 @@
-function Dashboard({ onLogout, onOpenList, onOpenReview, canManageChallenges, canReviewQueue }) {
+function Dashboard({ onLogout, onOpenList, onOpenReview, onOpenStaff, canManageChallenges, canReviewQueue, canManageStaff }) {
   return (
     <div>
       {/* top menu */}
@@ -14,6 +14,11 @@ function Dashboard({ onLogout, onOpenList, onOpenReview, canManageChallenges, ca
           {canReviewQueue && (
             <button type="button" className="nav-link" onClick={onOpenReview}>
               Review Queue
+            </button>
+          )}
+          {canManageStaff && (
+            <button type="button" className="nav-link" onClick={onOpenStaff}>
+              Staff Accounts
             </button>
           )}
           {/* logout button, click to go back to login */}

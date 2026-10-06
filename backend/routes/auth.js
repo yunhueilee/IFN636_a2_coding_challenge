@@ -3,19 +3,11 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { isStrongPassword } = require('../utils/passwordRules');
 
 const router = express.Router();
 
 const adminRoles = ['SUPER_ADMIN', 'ADMIN_MANAGER', 'ADMIN'];
-
-function isStrongPassword(password) {
-    return (
-        /[A-Z]/.test(password) &&
-        /[a-z]/.test(password) &&
-        /[0-9]/.test(password) &&
-        /[^A-Za-z0-9]/.test(password)
-    );
-}
 
 function makeToken(user, expiresIn) {
     return jwt.sign(

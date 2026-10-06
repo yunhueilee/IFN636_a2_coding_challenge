@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const challengeRoutes = require('./routes/challenges');
 const publishedChallengeRoutes = require('./routes/publishedChallenges');
 const submissionRoutes = require('./routes/submissions');
+const staffRoutes = require('./routes/staff');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -22,6 +23,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/challenges/published', publishedChallengeRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/submissions', submissionRoutes);
+// staff account APIs, super admin only
+app.use('/api/staff', staffRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

@@ -7,6 +7,7 @@ import ChallengeList from './ChallengeList.jsx'
 import CreateChallenge from './CreateChallenge.jsx'
 import Challenges from './Challenges.jsx'
 import ReviewQueue from './ReviewQueue.jsx'
+import StaffAccounts from './StaffAccounts.jsx'
 import NotFound from './NotFound.jsx'
 import Forbidden from './Forbidden.jsx'
 import { can } from './permissions.js'
@@ -201,6 +202,21 @@ function App() {
       )
     }
 
+    if (path === '/admin/staff') {
+      if (!can(role, 'staffManagement')) {
+        return <Forbidden onHome={goAdminHome} />
+      }
+
+      return (
+        <StaffAccounts
+          onLogout={handleLogout}
+          onForbidden={() => setErrorPage('403')}
+          onUnauthorized={handleLogout}
+          onOpenDashboard={() => navigate('/admin/dashboard')}
+        />
+      )
+    }
+
     if (path === '/admin/create') {
       if (!canManageChallenges) {
         return <Forbidden onHome={goAdminHome} />
@@ -263,8 +279,10 @@ function App() {
           onLogout={handleLogout}
           canManageChallenges={canManageChallenges}
           canReviewQueue={canReviewQueue}
+          canManageStaff={can(role, 'staffManagement')}
           onOpenList={() => navigate('/admin/challenges')}
           onOpenReview={() => navigate('/admin/review-queue')}
+          onOpenStaff={() => navigate('/admin/staff')}
         />
       )
     }
