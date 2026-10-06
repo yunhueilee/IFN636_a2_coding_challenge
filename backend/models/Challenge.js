@@ -49,6 +49,8 @@ const challengeSchema = new mongoose.Schema(
         challengeNumber: {
             type: String,
             trim: true, // filled by the server, e.g. CCP-CH-001
+            unique: true, // FR-05: two challenges can never share a number
+            sparse: true,
         },
         publishedAt: {
             type: Date, // set by the server when status becomes PUBLISHED
