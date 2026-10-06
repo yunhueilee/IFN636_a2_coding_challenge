@@ -3,6 +3,7 @@ const Challenge = require('../models/Challenge');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
+const { stateFor, InvalidTransitionError } = require('../states');
 
 const router = express.Router();
 const canManageChallenges = requireRole(...permissions.challengeManagement);
@@ -112,6 +113,7 @@ router.put('/:id', auth, canManageChallenges, async (req, res) => {
 });
 
 // ADMIN / ADMIN_MANAGER only: DRAFT -> PUBLISHED, PUBLISHED -> CLOSED
+// The current state object decides whether the transition is allowed (State pattern).
 router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
     try {
         const nextStatus = req.body.status;
@@ -121,20 +123,12 @@ router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
+        const state = stateFor(challenge);
+
         if (nextStatus === 'PUBLISHED') {
-            if (challenge.status !== 'DRAFT') {
-                return res.status(400).json({ message: 'Only a draft can be published' });
-            }
-
-            challenge.status = 'PUBLISHED';
-            challenge.publishedAt = new Date();
+            state.publish();
         } else if (nextStatus === 'CLOSED') {
-            if (challenge.status !== 'PUBLISHED') {
-                return res.status(400).json({ message: 'Only a published challenge can be closed' });
-            }
-
-            // close is allowed even if submissions already exist
-            challenge.status = 'CLOSED';
+            state.close(); // allowed even if submissions already exist
         } else {
             return res.status(400).json({ message: 'Status must be PUBLISHED or CLOSED' });
         }
@@ -143,6 +137,9 @@ router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
         await challenge.populate('createdBy', 'username');
         return res.json(challenge);
     } catch (error) {
+        if (error instanceof InvalidTransitionError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot update status' });
     }
@@ -157,13 +154,14 @@ router.delete('/:id', auth, canManageChallenges, async (req, res) => {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
-        if (challenge.status !== 'DRAFT') {
-            return res.status(400).json({ message: 'Only a draft can be discarded' });
-        }
+        stateFor(challenge).discard(); // throws unless the challenge is a DRAFT
 
         await challenge.deleteOne();
         return res.json({ message: 'Draft discarded' });
     } catch (error) {
+        if (error instanceof InvalidTransitionError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot discard draft' });
     }
