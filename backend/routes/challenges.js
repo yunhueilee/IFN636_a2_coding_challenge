@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
 const { stateFor, InvalidTransitionError } = require('../states');
+const { validateChallengeFields } = require('../utils/challengeValidation');
 
 const router = express.Router();
 const canManageChallenges = requireRole(...permissions.challengeManagement);
@@ -75,12 +76,46 @@ router.get('/', auth, canManageChallenges, async (req, res) => {
     }
 });
 
+// two admins saving at the same moment can be given the same number;
+// the unique index rejects the second one, so try again with the next number
+const MAX_NUMBER_ATTEMPTS = 3;
+
+async function createWithNextNumber(data) {
+    for (let attempt = 1; attempt <= MAX_NUMBER_ATTEMPTS; attempt += 1) {
+        try {
+            return await Challenge.create({
+                ...data,
+                challengeNumber: await nextChallengeNumber(),
+            });
+        } catch (error) {
+            const duplicateNumber = error.code === 11000;
+            if (!duplicateNumber || attempt === MAX_NUMBER_ATTEMPTS) {
+                throw error;
+            }
+        }
+    }
+}
+
+// send 400 with one message per bad field; the message is also shown on the form
+function sendFieldErrors(res, errors) {
+    return res.status(400).json({
+        message: Object.values(errors).join('. '),
+        errors,
+    });
+}
+
 // save a new draft
 router.post('/', auth, canManageChallenges, async (req, res) => {
     try {
-        const challenge = await Challenge.create({
-            ...draftFields(req.body),
-            challengeNumber: await nextChallengeNumber(),
+        const fields = draftFields(req.body);
+        const errors = validateChallengeFields(fields);
+
+        if (Object.keys(errors).length > 0) {
+            return sendFieldErrors(res, errors);
+        }
+
+        const challenge = await createWithNextNumber({
+            ...fields,
             createdBy: req.user.userId,
             status: 'DRAFT',
         });
@@ -95,9 +130,16 @@ router.post('/', auth, canManageChallenges, async (req, res) => {
 // save fields only, do not change status here
 router.put('/:id', auth, canManageChallenges, async (req, res) => {
     try {
+        const fields = draftFields(req.body);
+        const errors = validateChallengeFields(fields);
+
+        if (Object.keys(errors).length > 0) {
+            return sendFieldErrors(res, errors);
+        }
+
         const challenge = await Challenge.findByIdAndUpdate(
             req.params.id,
-            draftFields(req.body),
+            fields,
             { new: true, runValidators: true }
         ).populate('createdBy', 'username');
 
