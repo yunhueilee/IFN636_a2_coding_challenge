@@ -3,6 +3,8 @@ const Challenge = require('../models/Challenge');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions } = require('../permissions');
+const { stateFor, InvalidTransitionError } = require('../states');
+const { validateChallengeFields } = require('../utils/challengeValidation');
 
 const router = express.Router();
 const canManageChallenges = requireRole(...permissions.challengeManagement);
@@ -74,12 +76,46 @@ router.get('/', auth, canManageChallenges, async (req, res) => {
     }
 });
 
+// two admins saving at the same moment can be given the same number;
+// the unique index rejects the second one, so try again with the next number
+const MAX_NUMBER_ATTEMPTS = 3;
+
+async function createWithNextNumber(data) {
+    for (let attempt = 1; attempt <= MAX_NUMBER_ATTEMPTS; attempt += 1) {
+        try {
+            return await Challenge.create({
+                ...data,
+                challengeNumber: await nextChallengeNumber(),
+            });
+        } catch (error) {
+            const duplicateNumber = error.code === 11000;
+            if (!duplicateNumber || attempt === MAX_NUMBER_ATTEMPTS) {
+                throw error;
+            }
+        }
+    }
+}
+
+// send 400 with one message per bad field; the message is also shown on the form
+function sendFieldErrors(res, errors) {
+    return res.status(400).json({
+        message: Object.values(errors).join('. '),
+        errors,
+    });
+}
+
 // save a new draft
 router.post('/', auth, canManageChallenges, async (req, res) => {
     try {
-        const challenge = await Challenge.create({
-            ...draftFields(req.body),
-            challengeNumber: await nextChallengeNumber(),
+        const fields = draftFields(req.body);
+        const errors = validateChallengeFields(fields);
+
+        if (Object.keys(errors).length > 0) {
+            return sendFieldErrors(res, errors);
+        }
+
+        const challenge = await createWithNextNumber({
+            ...fields,
             createdBy: req.user.userId,
             status: 'DRAFT',
         });
@@ -94,9 +130,16 @@ router.post('/', auth, canManageChallenges, async (req, res) => {
 // save fields only, do not change status here
 router.put('/:id', auth, canManageChallenges, async (req, res) => {
     try {
+        const fields = draftFields(req.body);
+        const errors = validateChallengeFields(fields);
+
+        if (Object.keys(errors).length > 0) {
+            return sendFieldErrors(res, errors);
+        }
+
         const challenge = await Challenge.findByIdAndUpdate(
             req.params.id,
-            draftFields(req.body),
+            fields,
             { new: true, runValidators: true }
         ).populate('createdBy', 'username');
 
@@ -112,6 +155,7 @@ router.put('/:id', auth, canManageChallenges, async (req, res) => {
 });
 
 // ADMIN / ADMIN_MANAGER only: DRAFT -> PUBLISHED, PUBLISHED -> CLOSED
+// The current state object decides whether the transition is allowed (State pattern).
 router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
     try {
         const nextStatus = req.body.status;
@@ -121,20 +165,12 @@ router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
+        const state = stateFor(challenge);
+
         if (nextStatus === 'PUBLISHED') {
-            if (challenge.status !== 'DRAFT') {
-                return res.status(400).json({ message: 'Only a draft can be published' });
-            }
-
-            challenge.status = 'PUBLISHED';
-            challenge.publishedAt = new Date();
+            state.publish();
         } else if (nextStatus === 'CLOSED') {
-            if (challenge.status !== 'PUBLISHED') {
-                return res.status(400).json({ message: 'Only a published challenge can be closed' });
-            }
-
-            // close is allowed even if submissions already exist
-            challenge.status = 'CLOSED';
+            state.close(); // allowed even if submissions already exist
         } else {
             return res.status(400).json({ message: 'Status must be PUBLISHED or CLOSED' });
         }
@@ -143,6 +179,9 @@ router.patch('/:id/status', auth, canManageChallenges, async (req, res) => {
         await challenge.populate('createdBy', 'username');
         return res.json(challenge);
     } catch (error) {
+        if (error instanceof InvalidTransitionError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot update status' });
     }
@@ -157,13 +196,14 @@ router.delete('/:id', auth, canManageChallenges, async (req, res) => {
             return res.status(404).json({ message: 'Challenge not found' });
         }
 
-        if (challenge.status !== 'DRAFT') {
-            return res.status(400).json({ message: 'Only a draft can be discarded' });
-        }
+        stateFor(challenge).discard(); // throws unless the challenge is a DRAFT
 
         await challenge.deleteOne();
         return res.json({ message: 'Draft discarded' });
     } catch (error) {
+        if (error instanceof InvalidTransitionError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot discard draft' });
     }
