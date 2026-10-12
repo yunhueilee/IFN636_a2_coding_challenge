@@ -7,11 +7,17 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions, can } = require('../permissions');
-const { sendReviewEmail } = require('../utils/sendMail');
+const ReviewDecisionNotifier = require('../observers/ReviewDecisionNotifier');
+const ConsoleLogObserver = require('../observers/ConsoleLogObserver');
+const EmailObserver = require('../observers/EmailObserver');
 
 const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
 const canReview = requireRole(...permissions.reviewQueue);
+
+const reviewNotifier = new ReviewDecisionNotifier();
+reviewNotifier.subscribe(new ConsoleLogObserver());
+reviewNotifier.subscribe(new EmailObserver());
 
 // queue only wants the latest attempt that is still waiting
 const waitingForReview = {
@@ -366,18 +372,15 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
             { upsert: true, new: true }
         );
 
-        // email fail should not block the saved review
-        try {
-            await sendReviewEmail({
-                to: submission.learner.email,
-                challengeTitle: submission.challenge.title || submission.challenge.challengeNumber,
-                attemptNumber: submission.attemptNumber,
-                decision,
-                feedback,
-            });
-        } catch (mailError) {
-            console.error(mailError.message);
-        }
+        // each observer's error is caught inside notify, so it cannot block the saved review
+        await reviewNotifier.notify({
+            to: submission.learner.email,
+            challengeTitle: submission.challenge.title || submission.challenge.challengeNumber,
+            attemptNumber: submission.attemptNumber,
+            decision,
+            feedback,
+            status: submission.status,
+        });
 
         return res.json(submission);
     } catch (error) {

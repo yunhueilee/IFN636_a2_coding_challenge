@@ -1,8 +1,15 @@
 // send the review result to the learner
 // if SMTP is not set, just print it so we can still demo locally
-async function sendReviewEmail({ to, challengeTitle, attemptNumber, decision, feedback }) {
+async function sendReviewEmail({ to, challengeTitle, attemptNumber, decision, feedback, status }) {
     const subject = 'Review result: ' + (challengeTitle || 'your challenge');
-    const resultText = decision === 'PASS' ? 'PASS' : 'REVISION REQUIRED';
+    let resultText = 'REVISION REQUIRED';
+
+    if (decision === 'PASS') {
+        resultText = 'PASS';
+    } else if (status === 'FINAL_FAILED') {
+        resultText = 'FINAL FAIL - no more attempts are allowed';
+    }
+
     const text =
         'Your attempt ' +
         attemptNumber +
@@ -36,9 +43,9 @@ async function sendReviewEmail({ to, challengeTitle, attemptNumber, decision, fe
         secure: process.env.SMTP_SECURE === 'true',
         auth: process.env.SMTP_USER
             ? {
-                  user: process.env.SMTP_USER,
-                  pass: process.env.SMTP_PASS,
-              }
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            }
             : undefined,
     });
 
