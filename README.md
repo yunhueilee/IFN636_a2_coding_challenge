@@ -24,6 +24,7 @@ If the instance is stopped and started again, the public IP may change.
 | Admin Manager | Same as Admin, and can reassign a locked review |
 | Super Admin | Seeded staff account only. Cannot manage challenges or open the review queue |
 
+
 ## Pages
 
 Learner
