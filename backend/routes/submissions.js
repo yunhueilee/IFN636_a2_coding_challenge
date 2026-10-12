@@ -16,7 +16,7 @@ const canReview = requireRole(...permissions.reviewQueue);
 // queue only wants the latest attempt that is still waiting
 const waitingForReview = {
     selectedForReview: true,
-    status: { $nin: ['CANCELLED', 'PASSED', 'FAILED', 'ACCEPTED', 'REVISION_REQUIRED', 'FINAL_FAILED'] },
+    status: { $in: ['SUBMITTED', 'UNDER_REVIEW'] },
 };
 
 function isHttpUrl(value) {
@@ -208,7 +208,11 @@ router.post('/review-queue/:id/claim', auth, canReview, async (req, res) => {
             return res.status(404).json({ message: 'Attempt not found' });
         }
 
-        return res.status(409).json({ message: 'This attempt is already under review' });
+        if (existing.status === 'UNDER_REVIEW') {
+            return res.status(409).json({ message: 'This attempt is already under review' });
+        }
+
+        return res.status(409).json({ message: 'This attempt cannot be claimed for review' });
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot start review' });
