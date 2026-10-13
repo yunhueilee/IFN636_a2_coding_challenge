@@ -16,6 +16,7 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
   // published cards only, newest at the front
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
 
   useEffect(() => {
     const loadList = async () => {
@@ -40,6 +41,7 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
           return
         }
 
+
         const newestFirst = data.slice().sort((a, b) => {
           return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
         })
@@ -52,19 +54,50 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     loadList()
   }, [])
 
+  function sortAtoZ(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return a.title.localeCompare(b.title)
+    })
+  } 
+  
+  function sortNewestFirst(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
+    })
+  }
+
+  function sortAttempts(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return (b.attemptCount || 0) - (a.attemptCount || 0)
+    })
+  }
+
+const sortedChallenges =
+  sortBy === 'alphabetical'
+    ? sortAtoZ(challenges)
+    : sortBy === 'attempts'
+      ? sortAttempts(challenges)
+      : sortNewestFirst(challenges)
+
   return (
     <div>
       <h1 className="page-title">Challenges</h1>
 
       {message && <p className="form-message">{message}</p>}
 
-      {challenges.length === 0 && !message ? (
+      <div className="challenge-sort-controls">
+        <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
+        <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button>
+        <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
+      </div>
+
+      {sortedChallenges.length === 0 && !message ? (
         <p className="list-empty">No published challenges yet</p>
       ) : null}
 
-      {challenges.length > 0 && (
+      {sortedChallenges.length > 0 && (
         <div className="challenge-cards">
-          {challenges.map((item) => (
+          {sortedChallenges.map((item) => (
             <button
               key={item._id}
               type="button"

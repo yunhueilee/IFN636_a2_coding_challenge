@@ -572,3 +572,11 @@ input:disabled {
   color: #2563eb;
   font-weight: 600;
 }
+
+.challenge-sort-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-left: 30px;
+}
