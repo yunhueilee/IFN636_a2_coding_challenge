@@ -4,7 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "mocha --timeout 10000 --exit",
+    "test": "npm run test:mocha && npm run test:node",
+    "test:mocha": "mocha --timeout 10000 --exit test/challengeCreateEdit.test.js test/challengeManagement.test.js",
+    "test:node": "node --test test/auth.test.js test/passwordRules.test.js test/permissions.test.js test/requireRole.test.js test/sendMail.test.js test/staffAccountFactory.test.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed:admin": "node scripts/seedAdmin.js",

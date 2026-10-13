@@ -7,16 +7,22 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { permissions, can } = require('../permissions');
-const { sendReviewEmail } = require('../utils/sendMail');
+const ReviewDecisionNotifier = require('../observers/ReviewDecisionNotifier');
+const ConsoleLogObserver = require('../observers/ConsoleLogObserver');
+const EmailObserver = require('../observers/EmailObserver');
 
 const router = express.Router();
 const canSubmit = requireRole(...permissions.learnerChallenges);
 const canReview = requireRole(...permissions.reviewQueue);
 
+const reviewNotifier = new ReviewDecisionNotifier();
+reviewNotifier.subscribe(new ConsoleLogObserver());
+reviewNotifier.subscribe(new EmailObserver());
+
 // queue only wants the latest attempt that is still waiting
 const waitingForReview = {
     selectedForReview: true,
-    status: { $nin: ['CANCELLED', 'PASSED', 'FAILED', 'ACCEPTED', 'REVISION_REQUIRED', 'FINAL_FAILED'] },
+    status: { $in: ['SUBMITTED', 'UNDER_REVIEW'] },
 };
 
 function isHttpUrl(value) {
@@ -208,7 +214,11 @@ router.post('/review-queue/:id/claim', auth, canReview, async (req, res) => {
             return res.status(404).json({ message: 'Attempt not found' });
         }
 
-        return res.status(409).json({ message: 'This attempt is already under review' });
+        if (existing.status === 'UNDER_REVIEW') {
+            return res.status(409).json({ message: 'This attempt is already under review' });
+        }
+
+        return res.status(409).json({ message: 'This attempt cannot be claimed for review' });
     } catch (error) {
         console.error(error.message);
         return res.status(400).json({ message: 'Cannot start review' });
@@ -362,18 +372,15 @@ router.post('/review-queue/:id/decision', auth, canReview, async (req, res) => {
             { upsert: true, new: true }
         );
 
-        // email fail should not block the saved review
-        try {
-            await sendReviewEmail({
-                to: submission.learner.email,
-                challengeTitle: submission.challenge.title || submission.challenge.challengeNumber,
-                attemptNumber: submission.attemptNumber,
-                decision,
-                feedback,
-            });
-        } catch (mailError) {
-            console.error(mailError.message);
-        }
+        // each observer's error is caught inside notify, so it cannot block the saved review
+        await reviewNotifier.notify({
+            to: submission.learner.email,
+            challengeTitle: submission.challenge.title || submission.challenge.challengeNumber,
+            attemptNumber: submission.attemptNumber,
+            decision,
+            feedback,
+            status: submission.status,
+        });
 
         return res.json(submission);
     } catch (error) {
