@@ -7,12 +7,14 @@ on:
 
 jobs:
   test:
-    name: Run Tests
-    runs-on: self-hosted
+    name: Deploy to ${{ matrix.server }}
+    runs-on: [self-hosted, "${{ matrix.server }}"]
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: [22]
+        server: [server1, server2]
 
     environment: MONGO_URI
 
