@@ -17,6 +17,8 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
   const [sortBy, setSortBy] = useState('newest')
+  const [typeFilter, setTypeFilter] = useState('')
+
 
   useEffect(() => {
     const loadList = async () => {
@@ -58,8 +60,8 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     return challenges.slice().sort((a, b) => {
       return a.title.localeCompare(b.title)
     })
-  } 
-  
+  }
+
   function sortNewestFirst(challenges) {
     return challenges.slice().sort((a, b) => {
       return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
@@ -72,12 +74,17 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     })
   }
 
-const sortedChallenges =
-  sortBy === 'alphabetical'
-    ? sortAtoZ(challenges)
-    : sortBy === 'attempts'
-      ? sortAttempts(challenges)
-      : sortNewestFirst(challenges)
+  const filteredChallenges = typeFilter
+    ? challenges.filter((challenge) => challenge.type === typeFilter)
+    : challenges
+
+    
+  const sortedChallenges =
+    sortBy === 'alphabetical'
+      ? sortAtoZ(challenges)
+      : sortBy === 'attempts'
+        ? sortAttempts(challenges)
+        : sortNewestFirst(challenges)
 
   return (
     <div>
@@ -89,6 +96,13 @@ const sortedChallenges =
         <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
         <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button>
         <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
+        <button type="button" onClick={() => setSortBy('attempts')}>Difficulty: Lowest to Highest</button>
+        <button type="button" onClick={() => setSortBy('alphabetical')}>Difficulty: Highest to Lowest</button>
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+          <option value="">All</option>
+          <option value="Function">Function</option>
+          <option value="Debugging">Debugging</option>
+        </select>
       </div>
 
       {sortedChallenges.length === 0 && !message ? (
