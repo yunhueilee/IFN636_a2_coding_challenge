@@ -575,8 +575,28 @@ input:disabled {
 
 .challenge-sort-controls {
   display: flex;
+  align-items: center;
   flex-wrap: nowrap;
-  justify-content: flex-start;
   gap: 10px;
   margin-left: 30px;
+  /* margin-bottom: 12px; */
+}
+
+.challenge-sort-controls > button {
+  width: 140px;
+  flex: 0 0 140px;
+  box-sizing: border-box;
+  height: 40px;
+}
+
+.challenge-sort-controls > select {
+  width: 140px;
+  flex: 0 0 140px;
+  box-sizing: border-box;
+}
+
+.challenge-sort-controls > label {
+  margin: 0;
+  white-space: nowrap;
+  
 }

@@ -68,9 +68,21 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     })
   }
 
-  function sortAttempts(challenges) {
+  // function sortAttempts(challenges) {
+  //   return challenges.slice().sort((a, b) => {
+  //     return (b.attemptCount || 0) - (a.attemptCount || 0)
+  //   })
+  // }
+
+  function sortDifficulty91(challenges) {
     return challenges.slice().sort((a, b) => {
-      return (b.attemptCount || 0) - (a.attemptCount || 0)
+      return Number(b.tier || 0) - Number(a.tier || 0)
+    })
+  }
+
+  function sortDifficulty19(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return Number(a.tier || 0) - Number(b.tier || 0)
     })
   }
 
@@ -78,13 +90,20 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     ? challenges.filter((challenge) => challenge.type === typeFilter)
     : challenges
 
-    
+
+
   const sortedChallenges =
     sortBy === 'alphabetical'
-      ? sortAtoZ(challenges)
-      : sortBy === 'attempts'
-        ? sortAttempts(challenges)
-        : sortNewestFirst(challenges)
+      ? sortAtoZ(filteredChallenges)
+      // : sortBy === 'attempts'
+      //   ? sortAttempts(filteredChallenges)
+        : sortBy === 'Difficulty91'
+          ? sortDifficulty91(filteredChallenges)
+          : sortBy === 'Difficulty19'
+            ? sortDifficulty19(filteredChallenges)
+            : sortNewestFirst(filteredChallenges)
+
+
 
   return (
     <div>
@@ -94,14 +113,17 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
 
       <div className="challenge-sort-controls">
         <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
-        <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button>
+        {/* <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button> */}
         <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
-        <button type="button" onClick={() => setSortBy('attempts')}>Difficulty: Lowest to Highest</button>
-        <button type="button" onClick={() => setSortBy('alphabetical')}>Difficulty: Highest to Lowest</button>
+        <button type="button" onClick={() => setSortBy('Difficulty19')}>Difficulty: Easiet to Hardest</button>
+        <button type="button" onClick={() => setSortBy('Difficulty91')}>Difficulty: Hardest to Easiet</button>
+        <label htmlFor="challenge-type-filter">Filter type: </label>
         <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
           <option value="">All</option>
-          <option value="Function">Function</option>
           <option value="Debugging">Debugging</option>
+          <option value="Feature">Feature</option>
+          <option value="Refactoring">Refactoring</option>
+          <option value="Security">Security</option>
         </select>
       </div>
 
