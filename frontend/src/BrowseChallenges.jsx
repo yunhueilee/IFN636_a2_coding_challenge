@@ -43,6 +43,7 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
           return
         }
 
+        // sort by newest first for the initial display
 
         const newestFirst = data.slice().sort((a, b) => {
           return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
@@ -56,17 +57,25 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     loadList()
   }, [])
 
+
+  /// sorting functions
+
+  // sorts challenges alphabetically by title
   function sortAtoZ(challenges) {
     return challenges.slice().sort((a, b) => {
       return a.title.localeCompare(b.title)
     })
   }
 
+  // sorts challenges by published date, newest first
   function sortNewestFirst(challenges) {
     return challenges.slice().sort((a, b) => {
       return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
     })
   }
+
+  // sorts challenges by number of attempts, most attempts first
+  // currently not used, bugged
 
   // function sortAttempts(challenges) {
   //   return challenges.slice().sort((a, b) => {
@@ -74,34 +83,40 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
   //   })
   // }
 
+  // sorts challenges by difficulty, hardest first
   function sortDifficulty91(challenges) {
     return challenges.slice().sort((a, b) => {
       return Number(b.tier || 0) - Number(a.tier || 0)
     })
   }
 
+  // sorts challenges by difficulty, easiest first
   function sortDifficulty19(challenges) {
     return challenges.slice().sort((a, b) => {
       return Number(a.tier || 0) - Number(b.tier || 0)
     })
   }
 
+
+  // apply filters and sorting based on user selection of challegnge type
+  // allows for sorting function to apply to the filtered list of challenges
   const filteredChallenges = typeFilter
     ? challenges.filter((challenge) => challenge.type === typeFilter)
     : challenges
 
 
 
+  // apply sorting based on user selection of sort type
   const sortedChallenges =
     sortBy === 'alphabetical'
       ? sortAtoZ(filteredChallenges)
       // : sortBy === 'attempts'
       //   ? sortAttempts(filteredChallenges)
-        : sortBy === 'Difficulty91'
-          ? sortDifficulty91(filteredChallenges)
-          : sortBy === 'Difficulty19'
-            ? sortDifficulty19(filteredChallenges)
-            : sortNewestFirst(filteredChallenges)
+      : sortBy === 'Difficulty91'
+        ? sortDifficulty91(filteredChallenges)
+        : sortBy === 'Difficulty19'
+          ? sortDifficulty19(filteredChallenges)
+          : sortNewestFirst(filteredChallenges)
 
 
 
@@ -111,9 +126,15 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
 
       {message && <p className="form-message">{message}</p>}
 
+
+      // series of sort buttons and a dropdown filter for challenge type, which will update the displayed list of challenges based on the selected sort and filter options
+
       <div className="challenge-sort-controls">
         <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
+
+        // most attempt button is currently not used, as the sorting function is bugged
         {/* <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button> */}
+        
         <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
         <button type="button" onClick={() => setSortBy('Difficulty19')}>Difficulty: Easiet to Hardest</button>
         <button type="button" onClick={() => setSortBy('Difficulty91')}>Difficulty: Hardest to Easiet</button>

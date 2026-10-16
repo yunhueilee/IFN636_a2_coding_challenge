@@ -573,6 +573,9 @@ input:disabled {
   font-weight: 600;
 }
 
+
+/* display controls for general ussage with challenge sorting and filtering*/
+
 .challenge-sort-controls {
   display: flex;
   align-items: center;
@@ -583,6 +586,7 @@ input:disabled {
   
 }
 
+/* display controls for button specifications */
 .challenge-sort-controls > button {
   width: 140px;
   flex: 0 0 140px;
@@ -590,12 +594,14 @@ input:disabled {
   height: 40px;
 }
 
+/* display controls for select specifications */
 .challenge-sort-controls > select {
   width: 140px;
   flex: 0 0 140px;
   box-sizing: border-box;
 }
 
+/* display controls for label specifications */
 .challenge-sort-controls > label {
   margin: 0;
   white-space: nowrap;
