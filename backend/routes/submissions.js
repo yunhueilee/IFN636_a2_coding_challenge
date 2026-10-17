@@ -35,6 +35,35 @@ function isHttpUrl(value) {
     }
 }
 
+//New GP: check if the user has an attempt under review before allowing them to submit a new one
+function normalizeCommitUrl(commitUrl) {
+    // Normalize the commit URL to a standard format for comparison between submissions
+    try {
+        const url = new URL(String(commitUrl || '').trim());
+        return url.toString();
+    } catch (error) {
+        return '';
+    }
+}
+
+function findDuplicateCommit(submissions, newCommitUrl) {
+    // Compares the normalized commit URLs of existing submissions with the new commit URL
+    const normalizedNewCommitUrl = normalizeCommitUrl(newCommitUrl);
+    try{
+        return submissions.some((submission) => {
+            const normalizedExistingCommitUrl = normalizeCommitUrl(submission.commitUrl);
+            return normalizedExistingCommitUrl === normalizedNewCommitUrl;
+        });
+
+    } catch (error) {
+        console.error('Error normalizing commit URL:', error);
+        return false;   
+    }
+
+
+}
+
+
 // learner creates a new attempt
 router.post('/', auth, canSubmit, async (req, res) => {
     try {
@@ -78,10 +107,14 @@ router.post('/', auth, canSubmit, async (req, res) => {
             return res.status(400).json({ message: 'This challenge does not accept new submissions' });
         }
 
+
+
         const existing = await Submission.find({
             learner: req.user.userId,
             challenge: challenge._id,
         });
+
+
 
         if (existing.some((item) => item.status === 'ACCEPTED')) {
             return res.status(400).json({ message: 'This challenge is already completed' });
@@ -93,6 +126,11 @@ router.post('/', auth, canSubmit, async (req, res) => {
 
         if (existing.length >= 10) {
             return res.status(400).json({ message: 'You can submit at most 10 attempts' });
+        }
+
+        //New GP previous attempt with the same commit url
+        if (findDuplicateCommit(existing, commitUrl)) {
+            return res.status(400).json({ message: 'You have already submitted this commit URL for this challenge. Please check to make sure you have submitted the correct commit URL.' });
         }
 
         const underReview = existing.some((item) => item.status === 'UNDER_REVIEW');
@@ -446,6 +484,11 @@ router.get('/reviewed', auth, canReview, async (req, res) => {
         return res.status(400).json({ message: 'Cannot load reviewed attempts' });
     }
 });
+
+
+
+
+
 
 // learner can only see their own review history
 router.get('/reviews', auth, canSubmit, async (req, res) => {
