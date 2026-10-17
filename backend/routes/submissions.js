@@ -35,7 +35,7 @@ function isHttpUrl(value) {
     }
 }
 
-//New GP: check if the user has an attempt under review before allowing them to submit a new one
+//New GP: check if the user has an attempt with the same commit url for the same challenge
 function normalizeCommitUrl(commitUrl) {
     // Normalize the commit URL to a standard format for comparison between submissions
     try {
