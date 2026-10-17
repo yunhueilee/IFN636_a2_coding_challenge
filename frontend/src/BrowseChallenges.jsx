@@ -100,13 +100,36 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
 
   // apply filters and sorting based on user selection of challegnge type
   // allows for sorting function to apply to the filtered list of challenges
+
+  // Measure filtering performance
+  performance.clearMarks('filter-start')
+  performance.clearMarks('filter-end')
+  performance.clearMeasures('filter-duration')
+
+  performance.mark('filter-start')
+
   const filteredChallenges = typeFilter
     ? challenges.filter((challenge) => challenge.type === typeFilter)
     : challenges
 
+  performance.mark('filter-end')
+  performance.measure('filter-duration', 'filter-start', 'filter-end')
+
+  const filterTime = performance.getEntriesByName('filter-duration').slice(-1)[0]
+  console.log(`Filtering took ${filterTime.duration.toFixed(2)} ms`)
 
 
-  // apply sorting based on user selection of sort type
+
+
+  // apply sorting based on user selection of sort type based on button click, with default being newest first
+
+  // Measure sorting performance
+  performance.clearMarks('sort-start')
+  performance.clearMarks('sort-end')
+  performance.clearMeasures('sort-duration')
+
+  performance.mark('sort-start')
+
   const sortedChallenges =
     sortBy === 'alphabetical'
       ? sortAtoZ(filteredChallenges)
@@ -118,7 +141,11 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
           ? sortDifficulty19(filteredChallenges)
           : sortNewestFirst(filteredChallenges)
 
+  performance.mark('sort-end')
+  performance.measure('sort-duration', 'sort-start', 'sort-end')
 
+  const sortTime = performance.getEntriesByName('sort-duration').slice(-1)[0]
+  console.log(`Sorting took ${sortTime.duration.toFixed(2)} ms`)
 
   return (
     <div>
@@ -127,14 +154,14 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
       {message && <p className="form-message">{message}</p>}
 
 
-      // series of sort buttons and a dropdown filter for challenge type, which will update the displayed list of challenges based on the selected sort and filter options
+      {/* // series of sort buttons and a dropdown filter for challenge type, which will update the displayed list of challenges based on the selected sort and filter options */}
 
       <div className="challenge-sort-controls">
         <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
 
-        // most attempt button is currently not used, as the sorting function is bugged
+         {/* most attempt button is currently not used, as the sorting function is bugged */}
         {/* <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button> */}
-        
+
         <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
         <button type="button" onClick={() => setSortBy('Difficulty19')}>Difficulty: Easiet to Hardest</button>
         <button type="button" onClick={() => setSortBy('Difficulty91')}>Difficulty: Hardest to Easiet</button>
