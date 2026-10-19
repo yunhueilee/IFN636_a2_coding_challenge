@@ -16,6 +16,9 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
   // published cards only, newest at the front
   const [challenges, setChallenges] = useState([])
   const [message, setMessage] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
+  const [typeFilter, setTypeFilter] = useState('')
+
 
   useEffect(() => {
     const loadList = async () => {
@@ -40,6 +43,8 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
           return
         }
 
+        // sort by newest first for the initial display
+
         const newestFirst = data.slice().sort((a, b) => {
           return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
         })
@@ -52,19 +57,131 @@ function BrowseChallenges({ onUnauthorized, onOpenChallenge }) {
     loadList()
   }, [])
 
+
+  /// sorting functions
+
+  // sorts challenges alphabetically by title
+  function sortAtoZ(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return a.title.localeCompare(b.title)
+    })
+  }
+
+  // sorts challenges by published date, newest first
+  function sortNewestFirst(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0)
+    })
+  }
+
+  // sorts challenges by number of attempts, most attempts first
+  // currently not used, bugged
+
+  // function sortAttempts(challenges) {
+  //   return challenges.slice().sort((a, b) => {
+  //     return (b.attemptCount || 0) - (a.attemptCount || 0)
+  //   })
+  // }
+
+  // sorts challenges by difficulty, hardest first
+  function sortDifficulty91(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return Number(b.tier || 0) - Number(a.tier || 0)
+    })
+  }
+
+  // sorts challenges by difficulty, easiest first
+  function sortDifficulty19(challenges) {
+    return challenges.slice().sort((a, b) => {
+      return Number(a.tier || 0) - Number(b.tier || 0)
+    })
+  }
+
+
+  // apply filters and sorting based on user selection of challegnge type
+  // allows for sorting function to apply to the filtered list of challenges
+
+  // Measure filtering performance
+  performance.clearMarks('filter-start')
+  performance.clearMarks('filter-end')
+  performance.clearMeasures('filter-duration')
+
+  performance.mark('filter-start')
+
+  const filteredChallenges = typeFilter
+    ? challenges.filter((challenge) => challenge.type === typeFilter)
+    : challenges
+
+  performance.mark('filter-end')
+  performance.measure('filter-duration', 'filter-start', 'filter-end')
+
+  const filterTime = performance.getEntriesByName('filter-duration').slice(-1)[0]
+  console.log(`Filtering took ${filterTime.duration.toFixed(2)} ms`)
+
+
+
+
+  // apply sorting based on user selection of sort type based on button click, with default being newest first
+
+  // Measure sorting performance
+  performance.clearMarks('sort-start')
+  performance.clearMarks('sort-end')
+  performance.clearMeasures('sort-duration')
+
+  performance.mark('sort-start')
+
+  const sortedChallenges =
+    sortBy === 'alphabetical'
+      ? sortAtoZ(filteredChallenges)
+      // : sortBy === 'attempts'
+      //   ? sortAttempts(filteredChallenges)
+      : sortBy === 'Difficulty91'
+        ? sortDifficulty91(filteredChallenges)
+        : sortBy === 'Difficulty19'
+          ? sortDifficulty19(filteredChallenges)
+          : sortNewestFirst(filteredChallenges)
+
+  performance.mark('sort-end')
+  performance.measure('sort-duration', 'sort-start', 'sort-end')
+
+  const sortTime = performance.getEntriesByName('sort-duration').slice(-1)[0]
+  console.log(`Sorting took ${sortTime.duration.toFixed(2)} ms`)
+
   return (
     <div>
       <h1 className="page-title">Challenges</h1>
 
       {message && <p className="form-message">{message}</p>}
 
-      {challenges.length === 0 && !message ? (
+
+      {/* // series of sort buttons and a dropdown filter for challenge type, which will update the displayed list of challenges based on the selected sort and filter options */}
+
+      <div className="challenge-sort-controls">
+        <button type="button" onClick={() => setSortBy('newest')}>Newest</button>
+
+         {/* most attempt button is currently not used, as the sorting function is bugged */}
+        {/* <button type="button" onClick={() => setSortBy('attempts')}>Most attempts</button> */}
+
+        <button type="button" onClick={() => setSortBy('alphabetical')}>A-Z</button>
+        <button type="button" onClick={() => setSortBy('Difficulty19')}>Difficulty: Easiet to Hardest</button>
+        <button type="button" onClick={() => setSortBy('Difficulty91')}>Difficulty: Hardest to Easiet</button>
+        <label htmlFor="challenge-type-filter">Filter type: </label>
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+          <option value="">All</option>
+          <option value="Debugging">Debugging</option>
+          <option value="Feature">Feature</option>
+          <option value="Refactoring">Refactoring</option>
+          <option value="Security">Security</option>
+        </select>
+      </div>
+
+      {sortedChallenges.length === 0 && !message ? (
         <p className="list-empty">No published challenges yet</p>
       ) : null}
 
-      {challenges.length > 0 && (
+      {sortedChallenges.length > 0 && (
         <div className="challenge-cards">
-          {challenges.map((item) => (
+          {sortedChallenges.map((item) => (
             <button
               key={item._id}
               type="button"
