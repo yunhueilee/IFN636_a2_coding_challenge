@@ -45,9 +45,9 @@ async function findByLoginName(loginName) {
 router.post('/login', async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        const loginName = email || username;
+        const loginName = (typeof email === 'string' && email) || (typeof username === 'string' && username);
 
-        if (!loginName || !password) {
+        if (!loginName || typeof password !== 'string' || !password) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
@@ -83,9 +83,9 @@ router.post('/login', async (req, res) => {
 router.post('/learner-login', async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        const loginName = email || username;
+        const loginName = (typeof email === 'string' && email) || (typeof username === 'string' && username);
 
-        if (!loginName || !password) {
+        if (!loginName || typeof password !== 'string' || !password) {
             return res.status(400).json({ message: 'Email/username or password is incorrect.' });
         }
 
