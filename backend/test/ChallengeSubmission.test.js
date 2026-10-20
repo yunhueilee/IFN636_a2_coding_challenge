@@ -240,7 +240,7 @@ describe('Challenge submissions', () => {
 
 
 
-     it('it rejects a submission with a missing explanation', async () => {
+     it('it rejects a submission with an invalid commit URL', async () => {
         sinon.stub(User, 'findById').resolves({
             _id: USER_ID,
             role: 'LEARNER',
@@ -284,7 +284,7 @@ describe('Challenge submissions', () => {
 
     });
 
-        it('it rejects a submission with a missing commit URL', async () => {
+        it('it rejects a submission with a missing explanation', async () => {
         sinon.stub(User, 'findById').resolves({
             _id: USER_ID,
             role: 'LEARNER',
@@ -329,7 +329,7 @@ describe('Challenge submissions', () => {
     });
 
 
-     it('it rejects a submission with a missing explanation', async () => {
+     it('it rejects a submission with a duplicate commit url', async () => {
         sinon.stub(User, 'findById').resolves({
             _id: USER_ID,
             role: 'LEARNER',
@@ -339,13 +339,20 @@ describe('Challenge submissions', () => {
             _id: CHALLENGE_ID,
             status: 'PUBLISHED',
         });
-        sinon.stub(Submission, 'find').resolves([]);
+
+        sinon.stub(Submission, 'find').resolves([
+        {
+            status: 'SUBMITTED',
+            commitUrl: 'https://exampleOld',
+        },
+        ]);
+
         sinon.stub(Submission, 'updateMany').resolves({});
         sinon.stub(Submission, 'create').resolves({
             _id: '507f1f77bcf86cd799439033',
             challenge: CHALLENGE_ID,
             learner: USER_ID,
-            attemptNumber: 1,
+            attemptNumber: 2,
             status: 'SUBMITTED',
             selectedForReview: true,
         });
@@ -361,14 +368,14 @@ describe('Challenge submissions', () => {
             .set('Authorization', `Bearer ${token}`)
             .send({
                 challengeId: CHALLENGE_ID,
-                repoUrl: 'https://github.com/example/project',
-                commitUrl: 'https://github.com/example/project/commit/abc123',
-                explanation: '',
+                repoUrl: 'https://github.com',
+                commitUrl: 'https://exampleOld',
+                explanation: 'no',
                 testEvidence: 'All relevant tests pass.',
             });
 
         expect(response.status).to.equal(400);
-        expect(response.body.explanation).to.equal('This field is required');
+        expect(response.body.message).to.equal('You have already submitted this commit URL for this challenge. Please check to make sure you have submitted the correct commit URL.');
 
 
     });
@@ -567,4 +574,197 @@ describe('Challenge eligibility', () => {
         expect(response.body.message).to.equal('This challenge does not accept new submissions');
     });
     
+
+    it('rejects an attempt while another is under review', async () => {
+        sinon.stub(User, 'findById').resolves({
+            _id: USER_ID,
+            role: 'LEARNER',
+            active: true,
+        });
+        sinon.stub(Challenge, 'findById').resolves({
+            _id: CHALLENGE_ID,
+            status: 'PUBLISHED',
+        });
+        sinon.stub(Submission, 'find').resolves([
+        {
+            status: 'UNDER_REVIEW',
+            commitUrl: ' https://exampleOld',
+        },
+    ]);
+        sinon.stub(Submission, 'updateMany').resolves({});
+        sinon.stub(Submission, 'create').resolves({
+            _id: '507f1f77bcf86cd799439033',
+            challenge: CHALLENGE_ID,
+            learner: USER_ID,
+            attemptNumber: 2,
+            status: 'SUBMITTED',
+            selectedForReview: true,
+        });
+        sinon.stub(Progress, 'findOneAndUpdate').resolves({});
+
+        const token = jwt.sign(
+            { userId: USER_ID, role: 'LEARNER' },
+            process.env.JWT_SECRET
+        );
+
+        const response = await request(app)
+            .post('/api/submissions')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                challengeId: CHALLENGE_ID,
+                repoUrl: 'https://dr',
+                commitUrl: 'https://gdr',
+                explanation: 'Fixed the reported issue.',
+                testEvidence: 'All relevant tests pass.',
+            });
+
+        expect(response.status).to.equal(400);
+        expect(response.body.message).to.equal('You already have an attempt under review');
+    });
+
+
+        it('rejects an attempt while another attempt is accepted', async () => {
+        sinon.stub(User, 'findById').resolves({
+            _id: USER_ID,
+            role: 'LEARNER',
+            active: true,
+        });
+        sinon.stub(Challenge, 'findById').resolves({
+            _id: CHALLENGE_ID,
+            status: 'ACCEPTED',
+        });
+        sinon.stub(Submission, 'find').resolves([
+        {
+            status: 'UNDER_REVIEW',
+            commitUrl: ' https://exampleOld',
+        },
+    ]);
+        sinon.stub(Submission, 'updateMany').resolves({});
+        sinon.stub(Submission, 'create').resolves({
+            _id: '507f1f77bcf86cd799439033',
+            challenge: CHALLENGE_ID,
+            learner: USER_ID,
+            attemptNumber: 2,
+            status: 'SUBMITTED',
+            selectedForReview: true,
+        });
+        sinon.stub(Progress, 'findOneAndUpdate').resolves({});
+
+        const token = jwt.sign(
+            { userId: USER_ID, role: 'LEARNER' },
+            process.env.JWT_SECRET
+        );
+
+        const response = await request(app)
+            .post('/api/submissions')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                challengeId: CHALLENGE_ID,
+                repoUrl: 'https://dr',
+                commitUrl: 'https://gdr',
+                explanation: 'Fixed the reported issue.',
+                testEvidence: 'All relevant tests pass.',
+            });
+
+        expect(response.status).to.equal(400);
+        expect(response.body.message).to.equal('This challenge does not accept new submissions');
+    });
+
+
+
+    it('rejects an attempt while another is under review', async () => {
+        sinon.stub(User, 'findById').resolves({
+            _id: USER_ID,
+            role: 'LEARNER',
+            active: true,
+        });
+        sinon.stub(Challenge, 'findById').resolves({
+            _id: CHALLENGE_ID,
+            status: 'PUBLISHED',
+        });
+        sinon.stub(Submission, 'find').resolves([
+        {
+            status: 'UNDER_REVIEW',
+            commitUrl: ' https://exampleOld',
+        },
+    ]);
+        sinon.stub(Submission, 'updateMany').resolves({});
+        sinon.stub(Submission, 'create').resolves({
+            _id: '507f1f77bcf86cd799439033',
+            challenge: CHALLENGE_ID,
+            learner: USER_ID,
+            attemptNumber: 2,
+            status: 'SUBMITTED',
+            selectedForReview: true,
+        });
+        sinon.stub(Progress, 'findOneAndUpdate').resolves({});
+
+        const token = jwt.sign(
+            { userId: USER_ID, role: 'LEARNER' },
+            process.env.JWT_SECRET
+        );
+
+        const response = await request(app)
+            .post('/api/submissions')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                challengeId: CHALLENGE_ID,
+                repoUrl: 'https://dr',
+                commitUrl: 'https://gdr',
+                explanation: 'Fixed the reported issue.',
+                testEvidence: 'All relevant tests pass.',
+            });
+
+        expect(response.status).to.equal(400);
+        expect(response.body.message).to.equal('You already have an attempt under review');
+    });
+
+
+
+    it('rejects an attempt while final attempt is failed', async () => {
+        sinon.stub(User, 'findById').resolves({
+            _id: USER_ID,
+            role: 'LEARNER',
+            active: true,
+        });
+        sinon.stub(Challenge, 'findById').resolves({
+            _id: CHALLENGE_ID,
+            status: 'ACCEPTED',
+        });
+        sinon.stub(Submission, 'find').resolves([
+        {
+            status: 'UNDER_REVIEW',
+            commitUrl: ' https://exampleOld',
+        },
+    ]);
+        sinon.stub(Submission, 'updateMany').resolves({});
+        sinon.stub(Submission, 'create').resolves({
+            _id: '507f1f77bcf86cd799439033',
+            challenge: CHALLENGE_ID,
+            learner: USER_ID,
+            attemptNumber: 2,
+            status: 'FINAL_FAILED',
+            selectedForReview: true,
+        });
+        sinon.stub(Progress, 'findOneAndUpdate').resolves({});
+
+        const token = jwt.sign(
+            { userId: USER_ID, role: 'LEARNER' },
+            process.env.JWT_SECRET
+        );
+
+        const response = await request(app)
+            .post('/api/submissions')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                challengeId: CHALLENGE_ID,
+                repoUrl: 'https://dr',
+                commitUrl: 'https://gdr',
+                explanation: 'Fixed the reported issue.',
+                testEvidence: 'All relevant tests pass.',
+            });
+
+        expect(response.status).to.equal(400);
+        expect(response.body.message).to.equal('This challenge does not accept new submissions');
+    });
 });
